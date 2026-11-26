@@ -723,27 +723,41 @@ func (cli *Client) sendNewsletter(
 	mediaID string,
 	timings *MessageDebugTimings,
 ) ([]byte, error) {
+
 	attrs := waBinary.Attrs{
 		"to":   to,
 		"id":   id,
 		"type": getTypeFromMessage(message),
 	}
+	
 	if mediaID != "" {
 		attrs["media_id"] = mediaID
 	}
+
 	if message.EditedMessage != nil {
 		attrs["edit"] = string(types.EditAttributeAdminEdit)
 		message = message.GetEditedMessage().GetMessage().GetProtocolMessage().GetEditedMessage()
+
+		// Recompute the type from the unwrapped content: the wrapper maps to
+		// "text", and a media caption edit sent as type="text" is rejected
+		// by the server with error 479.
+		attrs["type"] = getTypeFromMessage(message)
+
+		fmt.Println("Testing fix to error 479!")
+
 	} else if message.ProtocolMessage != nil && message.ProtocolMessage.GetType() == waE2E.ProtocolMessage_REVOKE {
 		attrs["edit"] = string(types.EditAttributeAdminRevoke)
 		message = nil
 	}
+
 	start := time.Now()
 	plaintext, _, err := marshalMessage(to, message)
 	timings.Marshal = time.Since(start)
+
 	if err != nil {
 		return nil, err
 	}
+
 	plaintextNode := waBinary.Node{
 		Tag:     "plaintext",
 		Content: plaintext,
