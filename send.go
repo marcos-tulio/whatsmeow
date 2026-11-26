@@ -743,7 +743,7 @@ func (cli *Client) sendNewsletter(
 		// by the server with error 479.
 		attrs["type"] = getTypeFromMessage(message)
 
-		fmt.Println("Testing fix to error 479!")
+		//fmt.Println("Testing fix to error 479!")
 
 	} else if message.ProtocolMessage != nil && message.ProtocolMessage.GetType() == waE2E.ProtocolMessage_REVOKE {
 		attrs["edit"] = string(types.EditAttributeAdminRevoke)
